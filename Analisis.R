@@ -51,4 +51,5 @@ boxplot(colest,
         main="Diagrama de Caja de Colesterol", 
         ylab="Nivel", 
         col="orange")
-
+for (i in colest) {if (i >= 240) {j = j + 1
+k = k + 1} else if (i >= 200) {k = k + 1}}
