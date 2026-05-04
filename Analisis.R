@@ -51,5 +51,13 @@ boxplot(colest,
         main="Diagrama de Caja de Colesterol", 
         ylab="Nivel", 
         col="orange")
+
+j = 0 # Contador para altos
+k = 0 # Contador para moderados
 for (i in colest) {if (i >= 240) {j = j + 1
 k = k + 1} else if (i >= 200) {k = k + 1}}
+# Calculamos las proporciones (135 es el total de tu archivo)
+altos = j / 135
+medios = k / 135
+print(altos)
+print(medios)
