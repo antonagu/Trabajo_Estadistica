@@ -36,7 +36,7 @@ print(resumen)
 
 ## 3. Estudio del tipo de distribución de los datos
 
-Para entender la forma de distribución de los datos ,primero calculamos el coeficiente de asimetría de Fisher ($AF = \mu_3/\sigma_3$):
+Para entender la forma de distribución de los datos ,primero calculamos el coeficiente de asimetría de Fisher ($AF = \frac{\mu_3}{\sigma_3}$):
 ```{r}
 coeficiente_fisher <- function(x) {
   n <- length(x)
@@ -69,14 +69,12 @@ hist(colest, breaks = 30,
 
 # Histograma + KDE
 hist(colest, breaks = 30, probability = TRUE, 
-     col = "lightblue", border = "white",
+     col = "lightblue", border = "black",
      main = "Histograma y KDE",
      xlab = "Valores")
 lines(density(colest), col = "blue", lwd = 2)
-
-par(mfrow = c(1, 1))
-
 ```
+
 ### Comprobación Log-Normal (QQ-Plot)
 
 Aún no podemos estar seguros de que pueda seguir una distribución log-normal solo mirando el KDE. Realicemos un QQ-plot aplicando el logaritmo a los datos, ya que si $X$ sigue una log-normal, entonces $log(X)$ sigue una distribución normal.
@@ -85,6 +83,7 @@ qqnorm(log(colest), main="QQ-Plot de log(Niveles de colesterol)")
 qqline(log(colest), col = "red")
 
 ```
+
 Podemos observar que los puntos se alinean bastante bien sobre la línea roja, confirmando que $log(X)$ se aproxima a una distribución Normal. Entonces podemos concluir que los datos siguen una distribución asimétrica por la derecha que es **compatible con una distribución log-normal**.
 
 ### Identificación de valores atípicos (Boxplot)
@@ -109,7 +108,7 @@ Al observar el boxplot se pueden extraer varias conclusiones:
 Suponiendo que los valores recomendados de colesterol total son **inferiores** a 200 mg/dL, se consideran **moderados** entre 200 y 239 mg/dL, y **altos** a partir de 240 mg/dL.  
 
 Entonces, podemos observar que los valores de la media **(`r round(media,2)` mg/dL)** y de la mediana **(`r mediana` mg/dL)** son superiores de 200, lo que significa que la persona "promedia" se encuentra en el rango de nivel de colesterol moderado.  
-La dispersión de la muestra la podemos analizar calculando el coeficiente de variación ($CV = \sigma / |\mu|$):
+La dispersión de la muestra la podemos analizar calculando el coeficiente de variación ($CV = \frac{\sigma} {|\mu|}$):
 ```{r}
 CV <- desv_tip / abs(media)
 cat("El coeficiente de variación es de un: ",round(CV*100),"%")
