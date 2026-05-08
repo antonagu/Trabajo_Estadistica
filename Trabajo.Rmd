@@ -1,0 +1,117 @@
+---
+title: "Analisis"
+author: "Hecho por: Antonio Aguilar y Diego de Morillo"
+output: html_document
+---
+
+## 1. Introducción y Preparación de Datos
+
+En esta práctica vamos a realizar un análisis descriptivo sobre una muestra de niveles de colesterol total (en mg/dL). Estos datos son representativos de la población y buscamos analizar su distribución y estimar parámetros poblacionales relevantes.
+
+```{r}
+# Paquetes que se necesitan:
+# install.packages("readxl") # Quita '#' si no está instalado
+library(readxl)
+# Cargamos los datos
+datos <- read_excel("colesterol.xlsx")
+# Obtenemos los datos de la primera columna
+colest <- datos$'Niveles de colesterol'
+```
+
+## 2. Cálculo de Estadísticos Descriptivos
+
+A continuación, calculamos algunos estadísticos descriptivos para estimar los parámetros de la población:
+```{r}
+media <- mean(colest)
+mediana  <- median(colest)
+varianza <- var(colest)
+desv_tip <- sd(colest)
+rango    <- max(colest) - min(colest)
+RIC      <- IQR(colest) # Recorrido Intercuartílico
+
+resumen <- data.frame('Estadistico' = c("Media", "Mediana", "Varianza", "Desv. Típica", "Rango", "RIC"),
+                      'Valor' = c(media, mediana, varianza, desv_tip, rango, RIC))
+print(resumen)
+```
+
+## 3. Estudio del tipo de distribución de los datos
+
+Para entender la forma de distribución de los datos ,primero calculamos el coeficiente de asimetría de Fisher ($AF = \mu_3/\sigma_3$):
+```{r}
+coeficiente_fisher <- function(x) {
+  n <- length(x)
+  m3 <- sum((x - mean(x))^3) / n
+  s3 <- (sd(x))^3 
+  return(m3 / s3)
+}
+
+AF <- coeficiente_fisher(colest)
+cat("Coeficiente de asimetría (AF):", AF)
+
+```
+Vemos que el coeficiente de asimetría es de **`r AF` > 0**, luego, la cola larga está a la derecha. De hecho, podemos observar en nuestros estadísticos que la media es mayor que la mediana. Por tanto, **los datos observados siguen una distribución asimétrica positiva**.
+
+## 4. Análisis gráfico de la distribución de los datos
+
+### Histograma y Análisis de Normalidad
+Como el coeficiente de asimetría no es nulo, podemos concluir que los datos no siguen una distribución Normal perfecta. Gracias al histograma, podemos ver que es una distribución unimodal y que puede parecerse a una distribución normal, pero ya hemos comprobado analíticamente que no lo es.
+
+Como los datos observados (niveles de colesterol) no pueden ser negativos, y presentan una pequeña asimetría a la derecha, podemos pensar que **podrían seguir una distribución Log-Normal**. Primero representemos el histograma y el histograma con el estimador de densidad de Kernel (KDE).
+
+```{r}
+# Histograma normal
+hist(colest, breaks = 30,
+     main="Distribución de Niveles de Colesterol", 
+     xlab="Nivel de Colesterol", 
+     ylab="Frecuencia", 
+     col="lightblue", 
+     border="black")
+
+# Histograma + KDE
+hist(colest, breaks = 30, probability = TRUE, 
+     col = "lightblue", border = "white",
+     main = "Histograma y KDE",
+     xlab = "Valores")
+lines(density(colest), col = "blue", lwd = 2)
+
+par(mfrow = c(1, 1))
+
+```
+### Comprobación Log-Normal (QQ-Plot)
+
+Aún no podemos estar seguros de que pueda seguir una distribución log-normal solo mirando el KDE. Realicemos un QQ-plot aplicando el logaritmo a los datos, ya que si $X$ sigue una log-normal, entonces $log(X)$ sigue una distribución normal.
+```{r}
+qqnorm(log(colest), main="QQ-Plot de log(Niveles de colesterol)")
+qqline(log(colest), col = "red")
+
+```
+Podemos observar que los puntos se alinean bastante bien sobre la línea roja, confirmando que $log(X)$ se aproxima a una distribución Normal. Entonces podemos concluir que los datos siguen una distribución asimétrica por la derecha que es **compatible con una distribución log-normal**.
+
+### Identificación de valores atípicos (Boxplot)
+
+Ahora representemos el diagrama de caja de los datos para analizar la dispersión y la presencia de *outliers*.
+```{r}
+boxplot(colest, 
+        main="Diagrama de Caja de Colesterol", 
+        ylab="Nivel de colesterol (mg/dL)", 
+        col="orange")
+
+```
+
+Al observar el boxplot se pueden extraer varias conclusiones:  
+
+1. Hay un **valor atípico** que alcanza los 345 mg/dL. Podemos pensar que el dato es incorrecto (un error de medición) o que pertenece a una patología muy severa, ya que ese nivel de colesterol es extremadamente elevado.
+2. La media está descentrada, lo que corrobora que la distribución es asimétrica como hemos visto antes.
+3. La caja del boxplot no es tan estrecha, lo que indica que la mayoría de personas se concentran en un rango relativamente cercano a la mediana.
+
+## 5. Riesgo médico
+
+Suponiendo que los valores recomendados de colesterol total son **inferiores** a 200 mg/dL, se consideran **moderados** entre 200 y 239 mg/dL, y **altos** a partir de 240 mg/dL.  
+
+Entonces, podemos observar que los valores de la media **(`r round(media,2)` mg/dL)** y de la mediana **(`r mediana` mg/dL)** son superiores de 200, lo que significa que la persona "promedia" se encuentra en el rango de nivel de colesterol moderado.  
+La dispersión de la muestra la podemos analizar calculando el coeficiente de variación ($CV = \sigma / |\mu|$):
+```{r}
+CV <- desv_tip / abs(media)
+cat("El coeficiente de variación es de un: ",round(CV*100),"%")
+```
+El coeficiente de variación nos dice que la variabilidad de los datos es moderada. Esto lo podemos confirmar viendo el boxplot, donde vemos que la caja central es relativamente compacta.
